@@ -604,7 +604,7 @@ with tab_perf:
     fig_eq_dd.update_yaxes(title_text="Drawdown", tickformat=".0%", row=2, col=1)
     fig_eq_dd.update_xaxes(tickformat="%Y", row=2, col=1)
     _apply_layout(fig_eq_dd, height=650)
-    st.plotly_chart(fig_eq_dd, use_container_width=True)
+    st.plotly_chart(fig_eq_dd, width="stretch")
 
     # H. BENCHMARK COST ASYMMETRY NOTICE
     st.caption("Note: Strategy returns are net of transaction costs (10-50 bps time-varying). "
@@ -632,7 +632,7 @@ with tab_perf:
         )
         fig_hm.update_layout(height=max(400, len(hm_pivot) * 28))
         _apply_layout(fig_hm, height=max(400, len(hm_pivot) * 28))
-        st.plotly_chart(fig_hm, use_container_width=True)
+        st.plotly_chart(fig_hm, width="stretch")
 
     # --- Annual Returns Table ---
     st.subheader("Annual Returns")
@@ -649,8 +649,8 @@ with tab_perf:
         avg_row.name = "Average"
         annual_df = pd.concat([annual_df, avg_row.to_frame().T])
         st.dataframe(
-            annual_df.style.format("{:.2%}").background_gradient(cmap="RdYlGn", axis=None),
-            use_container_width=True,
+            annual_df.style.format("{:.2%}"),
+            width="stretch",
         )
 
 # =========================================================================
@@ -678,7 +678,7 @@ with tab_risk:
     fig_rs.update_yaxes(title="Sharpe Ratio")
     fig_rs.update_xaxes(tickformat="%Y")
     _apply_layout(fig_rs, height=400)
-    st.plotly_chart(fig_rs, use_container_width=True)
+    st.plotly_chart(fig_rs, width="stretch")
 
     # --- Return Distribution with VaR/CVaR for ALL strategies ---
     st.subheader("Return Distribution")
@@ -717,7 +717,7 @@ with tab_risk:
     fig_dist.update_xaxes(title="Monthly Return (%)")
     fig_dist.update_yaxes(title="Count")
     _apply_layout(fig_dist, height=400, barmode="overlay")
-    st.plotly_chart(fig_dist, use_container_width=True)
+    st.plotly_chart(fig_dist, width="stretch")
 
     # --- Rolling Benchmark Correlation ---
     if bench_returns_dict and strat_names:
@@ -740,7 +740,7 @@ with tab_risk:
         fig_corr.update_yaxes(title="Correlation", range=[-1, 1])
         fig_corr.update_xaxes(tickformat="%Y")
         _apply_layout(fig_corr, height=400)
-        st.plotly_chart(fig_corr, use_container_width=True)
+        st.plotly_chart(fig_corr, width="stretch")
 
 # =========================================================================
 # TAB: Comparison
@@ -779,7 +779,7 @@ with tab_compare:
 
         _apply_layout(fig_comp, height=400)
         fig_comp.update_layout(barmode="group")
-        st.plotly_chart(fig_comp, use_container_width=True)
+        st.plotly_chart(fig_comp, width="stretch")
 
     # --- Full Metrics Comparison Table (transposed: metrics as rows) ---
     st.subheader("Full Metrics Comparison")
@@ -912,7 +912,7 @@ with tab_compare:
                 # Styler.format with subset (row selection)
                 styled = styled.format(make_formatter(fmt), subset=(label, slice(None)))
 
-            st.dataframe(styled, use_container_width=True)
+            st.dataframe(styled, width="stretch")
 
     # G. DOWNLOAD BUTTONS
     st.subheader("Export Data")
@@ -950,7 +950,7 @@ with tab_detail:
             fig_ht.update_yaxes(title="Weight (%)", range=[0, 100])
             fig_ht.update_xaxes(tickformat="%Y")
             _apply_layout(fig_ht, height=400)
-            st.plotly_chart(fig_ht, use_container_width=True)
+            st.plotly_chart(fig_ht, width="stretch")
         else:
             st.info("No holdings data available.")
 
@@ -967,13 +967,13 @@ with tab_detail:
             best = sorted_months.tail(10).iloc[::-1]
             best_df = pd.DataFrame({"Date": best.index.strftime("%Y-%m"), "Return": best.values})
             best_df["Return"] = best_df["Return"].apply(lambda x: f"{x:.2%}")
-            st.dataframe(best_df, use_container_width=True, hide_index=True)
+            st.dataframe(best_df, width="stretch", hide_index=True)
         with col_worst:
             st.write("**Worst Months**")
             worst = sorted_months.head(10)
             worst_df = pd.DataFrame({"Date": worst.index.strftime("%Y-%m"), "Return": worst.values})
             worst_df["Return"] = worst_df["Return"].apply(lambda x: f"{x:.2%}")
-            st.dataframe(worst_df, use_container_width=True, hide_index=True)
+            st.dataframe(worst_df, width="stretch", hide_index=True)
 
     # --- Final Holdings (strategies only) ---
     if strat_names:
@@ -997,7 +997,7 @@ with tab_detail:
             final["weight"] = final["weight"].apply(lambda x: f"{x:.2%}")
             final["value"] = final["value"].apply(lambda x: f"${x:,.2f}")
             st.write(f"**{name}** (as of {last_date.strftime('%Y-%m')})")
-            st.dataframe(final, use_container_width=True, hide_index=True)
+            st.dataframe(final, width="stretch", hide_index=True)
 
     # --- Trade Log ---
     if strat_names:
@@ -1005,7 +1005,7 @@ with tab_detail:
         for name, res in strategy_results.items():
             if hasattr(res, 'trades') and res.trades is not None and len(res.trades) > 0:
                 with st.expander(f"Trade Log: {name}"):
-                    st.dataframe(res.trades, use_container_width=True)
+                    st.dataframe(res.trades, width="stretch")
 
 # =========================================================================
 # TAB: Holdings
@@ -1051,7 +1051,7 @@ with tab_holdings:
                 display_current["value"] = display_current["value"].apply(lambda x: f"${x:,.2f}")
                 display_current["weight"] = display_current["weight"].apply(lambda x: f"{x:.2%}")
                 display_current.columns = ["Ticker", "Shares", "Value ($)", "Weight (%)"]
-                st.dataframe(display_current, use_container_width=True, hide_index=True)
+                st.dataframe(display_current, width="stretch", hide_index=True)
                 st.metric("Total Portfolio Value", f"${total_value:,.0f}")
 
         # -----------------------------------------------------------------
@@ -1071,7 +1071,7 @@ with tab_holdings:
                 timeline_df["weight"] = timeline_df["weight"].apply(lambda x: f"{x:.2%}")
                 timeline_df["shares"] = timeline_df["shares"].apply(lambda x: f"{x:,.4f}")
                 timeline_df.columns = ["Date", "Ticker", "Shares", "Value ($)", "Weight (%)"]
-                st.dataframe(timeline_df, use_container_width=True, hide_index=True)
+                st.dataframe(timeline_df, width="stretch", hide_index=True)
 
         # -----------------------------------------------------------------
         # C. Holdings Change Log
@@ -1123,6 +1123,6 @@ with tab_holdings:
 
                 if change_records:
                     change_df = pd.DataFrame(change_records)
-                    st.dataframe(change_df, use_container_width=True, hide_index=True)
+                    st.dataframe(change_df, width="stretch", hide_index=True)
                 else:
                     st.info("No significant position changes detected.")
