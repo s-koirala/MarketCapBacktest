@@ -1,0 +1,13 @@
+{
+  "rc_pvalue": 0.831,
+  "rc_best_params": "(10, 12)",
+  "n_folds": 29,
+  "grid_size": 48,
+  "data_manifest_snapshot": {
+    "prices_monthly.parquet": "6628cb534547efdfd1743ad142bb327930785fa8298cebed50c52c5afc903fe4",
+    "splits.parquet": "3dd9765ef7067c1fb9e96000d08c6856e0e1d524a2713a37868690c3af908ecd",
+    "shares_outstanding.parquet": "83d75973031eae95c88a2544da52896e4934fc04506036744e01721eef2aff6e",
+    "risk_free.parquet": "98355e3219685530c4c3ee9077813b440b16fdcb52265cc1a051c7cec6cf595c",
+    "benchmarks_monthly.parquet": "fe00bf7989ad994e40dd0f15e8409224bbdfdd54a785b2851da563296659525d"
+  }
+}

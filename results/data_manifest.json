@@ -1,0 +1,60 @@
+{
+  "prices_monthly.parquet": {
+    "sha256": "6628cb534547efdfd1743ad142bb327930785fa8298cebed50c52c5afc903fe4",
+    "fetch_date": "2026-03-18T10:48:32.232980",
+    "rows": 18408,
+    "columns": [
+      "date",
+      "ticker",
+      "open",
+      "high",
+      "low",
+      "close",
+      "adj_close",
+      "volume"
+    ],
+    "description": "Monthly OHLCV + adj_close for active tickers + BRK-A"
+  },
+  "splits.parquet": {
+    "sha256": "3dd9765ef7067c1fb9e96000d08c6856e0e1d524a2713a37868690c3af908ecd",
+    "fetch_date": "2026-03-18T10:48:53.996154",
+    "rows": 262,
+    "columns": [
+      "date",
+      "ticker",
+      "split_ratio"
+    ],
+    "description": "Historical stock splits"
+  },
+  "shares_outstanding.parquet": {
+    "sha256": "83d75973031eae95c88a2544da52896e4934fc04506036744e01721eef2aff6e",
+    "fetch_date": "2026-03-18T10:49:04.505974",
+    "rows": 48,
+    "columns": [
+      "ticker",
+      "shares_outstanding"
+    ],
+    "description": "Current shares outstanding per ticker"
+  },
+  "risk_free.parquet": {
+    "sha256": "98355e3219685530c4c3ee9077813b440b16fdcb52265cc1a051c7cec6cf595c",
+    "fetch_date": "2026-03-18T10:49:07.680861",
+    "rows": 435,
+    "columns": [
+      "date",
+      "rf_monthly"
+    ],
+    "description": "Monthly risk-free rate (DGS3MO converted)"
+  },
+  "benchmarks_monthly.parquet": {
+    "sha256": "fe00bf7989ad994e40dd0f15e8409224bbdfdd54a785b2851da563296659525d",
+    "fetch_date": "2026-03-18T10:49:09.850012",
+    "rows": 1577,
+    "columns": [
+      "date",
+      "benchmark",
+      "adj_close"
+    ],
+    "description": "Monthly benchmark adj_close"
+  }
+}

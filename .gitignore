@@ -5,9 +5,8 @@ __pycache__/
 .venv/
 venv/
 
-# Cached data (large parquet files — regenerate via data_fetcher.py)
-results/*.parquet
-results/data_manifest.json
+# Cached data — committed for Streamlit Cloud deployment.
+# Regenerate locally via: python scripts/data_fetcher.py
 
 # IDE
 .vscode/
