@@ -544,7 +544,8 @@ if __name__ == "__main__":
 
     logger.info("Estimating market caps...")
     mcaps = estimate_market_caps(
-        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"]
+        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"],
+        historical_shares=data.get("historical_shares"),
     )
     rankings = rank_by_market_cap(mcaps)
 

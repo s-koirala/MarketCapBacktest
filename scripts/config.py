@@ -38,6 +38,7 @@ ACTIVE_TICKERS = {
     # IPO / earliest data post-1990
     "CSCO": 1990,    # IPO Feb 1990
     "BRK-B": 1996,   # IPO May 1996
+    "AMZN": 1997,     # IPO May 1997
     "NVDA": 1999,     # IPO Jan 1999
     "GOOGL": 2004,    # IPO Aug 2004
     "MA": 2006,       # IPO May 2006

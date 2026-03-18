@@ -210,6 +210,20 @@ def fetch_shares_outstanding(tickers: list[str]) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Historical Shares Outstanding
+# ---------------------------------------------------------------------------
+
+def load_historical_shares() -> pd.DataFrame:
+    """Load historical shares outstanding from CSV."""
+    path = DATA_DIR / "historical_shares_outstanding.csv"
+    if not path.exists():
+        logger.warning("Historical shares CSV not found at %s", path)
+        return pd.DataFrame(columns=["date", "ticker", "shares_outstanding"])
+    df = pd.read_csv(path, parse_dates=["date"])
+    return df[["date", "ticker", "shares_outstanding"]]
+
+
+# ---------------------------------------------------------------------------
 # Risk-Free Rate
 # ---------------------------------------------------------------------------
 
@@ -495,6 +509,9 @@ def fetch_all(
 
     # --- Delisted ---
     result["delisted"] = load_delisted_data()
+
+    # --- Historical Shares Outstanding ---
+    result["historical_shares"] = load_historical_shares()
 
     # --- Benchmarks ---
     cache_name = "benchmarks_monthly.parquet"

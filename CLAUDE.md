@@ -156,7 +156,7 @@ All F1–F14 from `audit_implementation_plan_20260317.md` were remediated in the
 
 ## Key Design Decisions
 
-1. **Market cap estimation:** `close(t) × shares_outstanding_current / cumulative_split_factor(t→now)`. Uses unadjusted close to avoid double-counting splits. Buyback/issuance error quantified at 8 checkpoint years.
+1. **Market cap estimation:** `close_split_adjusted(t) × shares_outstanding(t)`. The `close` column from yfinance is already split-adjusted, so we use it directly with actual historical shares outstanding (SEC EDGAR + yfinance `get_shares_full()`, 2009+). For dates without historical shares data, falls back to current shares outstanding (valid because both close and current shares are on the same split-adjusted basis). This avoids the previous double-counting bug where split factors were applied to already-split-adjusted prices, and also corrects for buybacks/dilution where historical shares data is available.
 
 2. **TWR calculation:** Pure TWR using `portfolio_value_before_cf` (mark-to-market before any cash flows). No Modified Dietz W-factor needed — contributions arrive at period end with zero exposure.
 

@@ -677,7 +677,10 @@ def main():
 
     print("Loading data...")
     data = fetch_all(use_cache=True)
-    mcaps = estimate_market_caps(data["prices"], data["splits"], data["shares_outstanding"], data["delisted"])
+    mcaps = estimate_market_caps(
+        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"],
+        historical_shares=data.get("historical_shares"),
+    )
     rankings = rank_by_market_cap(mcaps)
     rf = data.get("risk_free", pd.Series(dtype=float))
     benchmarks = data["benchmarks"]

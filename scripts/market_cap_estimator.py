@@ -1,14 +1,13 @@
 """
 market_cap_estimator.py — Market cap estimation and ranking engine.
 
-Uses the split-adjusted shares outstanding method:
-    market_cap(t) = close(t) × shares_outstanding_backward(t)
+Uses split-adjusted close from yfinance × actual historical shares outstanding:
+    market_cap(t) = close_split_adjusted(t) × shares_outstanding(t)
 
-where:
-    shares_outstanding_backward(t) = shares_outstanding_current / cumulative_split_factor(t→now)
-
-This isolates split adjustments from buybacks/issuances. Residual error from
-buybacks/issuances is quantified in the validation phase.
+Historical shares outstanding are sourced from SEC EDGAR + yfinance
+get_shares_full() (2009+). For dates without historical shares data, falls
+back to current shares outstanding (valid because yfinance close is already
+split-adjusted, so close × current_shares gives correct current-basis market cap).
 
 BRK-A and BRK-B are aggregated into a single 'BRK' entry for ranking.
 """
@@ -112,12 +111,20 @@ def estimate_market_caps(
     splits: pd.DataFrame,
     shares: pd.DataFrame,
     delisted: pd.DataFrame,
+    historical_shares: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
     Estimate historical market capitalization for all tickers.
 
     For active tickers:
-        market_cap(t) = close(t) × (shares_outstanding_current / cum_split_factor(t→now))
+        market_cap(t) = close_split_adjusted(t) × shares_outstanding(t)
+
+    The ``close`` column from yfinance is already split-adjusted, so we
+    multiply by actual historical shares outstanding where available (from
+    SEC EDGAR / yfinance get_shares_full).  For dates without historical
+    shares data, we fall back to current shares outstanding — this is valid
+    because both close and current shares are on the same split-adjusted
+    basis.
 
     For delisted tickers:
         market_cap(t) = close(t) × shares_outstanding(t)  [from static CSV]
@@ -130,6 +137,9 @@ def estimate_market_caps(
     splits : DataFrame [date, ticker, split_ratio]
     shares : DataFrame [ticker, shares_outstanding]
     delisted : DataFrame [date, ticker, close, shares_outstanding]
+    historical_shares : DataFrame [date, ticker, shares_outstanding] or None
+        Historical shares outstanding from CSV. When provided, overrides the
+        current-shares fallback for dates/tickers where data exists.
 
     Returns
     -------
@@ -142,15 +152,30 @@ def estimate_market_caps(
     logger.info("Computing cumulative split factors for %d tickers...", len(shares))
     csf = compute_cumulative_split_factor(splits, shares, date_index)
 
-    # Merge prices (unadjusted close) with split factors and current shares
+    # Merge prices (split-adjusted close) with split factors and current shares
     active = prices[["date", "ticker", "close"]].merge(
         csf, on=["date", "ticker"], how="inner"
     ).merge(
         shares, on="ticker", how="inner"
     )
 
-    # shares_outstanding_backward(t) = shares_outstanding_current / cum_split_factor(t→now)
-    active["backward_shares"] = active["shares_outstanding"] / active["cum_split_factor"]
+    # Default: close is split-adjusted from yfinance, so use current shares
+    # directly (no split factor needed — both are in current-split-basis).
+    active["backward_shares"] = active["shares_outstanding"]
+
+    # Override with historical shares where available (fixes buyback/dilution error).
+    if historical_shares is not None and not historical_shares.empty:
+        hist = historical_shares[["date", "ticker", "shares_outstanding"]].copy()
+        hist = hist.rename(columns={"shares_outstanding": "hist_shares"})
+        active = active.merge(hist, on=["date", "ticker"], how="left")
+        mask = active["hist_shares"].notna()
+        active.loc[mask, "backward_shares"] = active.loc[mask, "hist_shares"]
+        active = active.drop(columns=["hist_shares"])
+        logger.info(
+            "Historical shares override: %d of %d rows (%.1f%%)",
+            mask.sum(), len(active), 100.0 * mask.sum() / len(active),
+        )
+
     active["estimated_market_cap"] = active["close"] * active["backward_shares"]
 
     result_active = active[["date", "ticker", "estimated_market_cap"]].copy()
@@ -495,7 +520,8 @@ if __name__ == "__main__":
 
     logger.info("Estimating market caps...")
     mcaps = estimate_market_caps(
-        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"]
+        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"],
+        historical_shares=data.get("historical_shares"),
     )
 
     logger.info("Ranking...")

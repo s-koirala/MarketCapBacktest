@@ -191,7 +191,8 @@ def load_data():
     from market_cap_estimator import estimate_market_caps, rank_by_market_cap
     data = fetch_all(use_cache=True)
     mcaps = estimate_market_caps(
-        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"]
+        data["prices"], data["splits"], data["shares_outstanding"], data["delisted"],
+        historical_shares=data.get("historical_shares"),
     )
     rankings = rank_by_market_cap(mcaps)
     return data, mcaps, rankings

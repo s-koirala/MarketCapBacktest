@@ -1,8 +1,8 @@
 {
   "prices_monthly.parquet": {
-    "sha256": "6628cb534547efdfd1743ad142bb327930785fa8298cebed50c52c5afc903fe4",
-    "fetch_date": "2026-03-18T10:48:32.232980",
-    "rows": 18408,
+    "sha256": "1b12dfdde19c8cc9829d83cacdbdfe04de623e2ae080916a93572c6b56b9517c",
+    "fetch_date": "2026-03-18T14:21:04.531633",
+    "rows": 18755,
     "columns": [
       "date",
       "ticker",
@@ -16,9 +16,9 @@
     "description": "Monthly OHLCV + adj_close for active tickers + BRK-A"
   },
   "splits.parquet": {
-    "sha256": "3dd9765ef7067c1fb9e96000d08c6856e0e1d524a2713a37868690c3af908ecd",
-    "fetch_date": "2026-03-18T10:48:53.996154",
-    "rows": 262,
+    "sha256": "2ca269c780328d391bd88f3092f22b59314bb4c409b9b5e0a555adde72d08118",
+    "fetch_date": "2026-03-18T14:21:28.722266",
+    "rows": 266,
     "columns": [
       "date",
       "ticker",
@@ -27,9 +27,9 @@
     "description": "Historical stock splits"
   },
   "shares_outstanding.parquet": {
-    "sha256": "83d75973031eae95c88a2544da52896e4934fc04506036744e01721eef2aff6e",
-    "fetch_date": "2026-03-18T10:49:04.505974",
-    "rows": 48,
+    "sha256": "3ddad97ff37ad76c753d4874bc33602d1f0829bef9d5a712bdf2d9c9781f0bda",
+    "fetch_date": "2026-03-18T14:21:39.199070",
+    "rows": 49,
     "columns": [
       "ticker",
       "shares_outstanding"
@@ -38,7 +38,7 @@
   },
   "risk_free.parquet": {
     "sha256": "98355e3219685530c4c3ee9077813b440b16fdcb52265cc1a051c7cec6cf595c",
-    "fetch_date": "2026-03-18T10:49:07.680861",
+    "fetch_date": "2026-03-18T14:21:39.921990",
     "rows": 435,
     "columns": [
       "date",
@@ -47,8 +47,8 @@
     "description": "Monthly risk-free rate (DGS3MO converted)"
   },
   "benchmarks_monthly.parquet": {
-    "sha256": "fe00bf7989ad994e40dd0f15e8409224bbdfdd54a785b2851da563296659525d",
-    "fetch_date": "2026-03-18T10:49:09.850012",
+    "sha256": "324300bd7ca46932e0fc5af9ebf644c75ec0530f40500ba330a4797f3cea95e0",
+    "fetch_date": "2026-03-18T14:21:41.319692",
     "rows": 1577,
     "columns": [
       "date",
