@@ -494,14 +494,14 @@ if __name__ == "__main__":
         strategy_name="Top-1 Market Cap",
     )
 
-    print(f"\n=== {result.strategy_name} ===")
-    print(f"Equity curve: {len(result.equity_curve)} months")
-    print(f"Start: ${result.equity_curve.iloc[0]:,.2f}")
-    print(f"End:   ${result.equity_curve.iloc[-1]:,.2f}")
-    print(f"Trades: {len(result.trades)}")
+    logger.info("=== %s ===", result.strategy_name)
+    logger.info("Equity curve: %d months", len(result.equity_curve))
+    logger.info("Start: $%s", f"{result.equity_curve.iloc[0]:,.2f}")
+    logger.info("End:   $%s", f"{result.equity_curve.iloc[-1]:,.2f}")
+    logger.info("Trades: %d", len(result.trades))
     total_costs = result.trades["cost_dollar"].sum() if len(result.trades) > 0 else 0
-    print(f"Total transaction costs: ${total_costs:,.2f}")
-    print(f"TWR returns: {len(result.twr_returns)} months")
+    logger.info("Total transaction costs: $%s", f"{total_costs:,.2f}")
+    logger.info("TWR returns: %d months", len(result.twr_returns))
     if len(result.twr_returns) > 1:
         cum_twr = (1 + result.twr_returns).prod() - 1
-        print(f"Cumulative TWR: {cum_twr:.2%}")
+        logger.info("Cumulative TWR: %s", f"{cum_twr:.2%}")

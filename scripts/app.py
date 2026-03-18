@@ -17,6 +17,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
+import logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 # Ensure scripts dir is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -152,6 +154,8 @@ st.set_page_config(page_title="Market Cap Backtest", layout="wide")
 # ---------------------------------------------------------------------------
 # B. CUSTOM CSS
 # ---------------------------------------------------------------------------
+# SECURITY NOTE: This CSS block is static. Do NOT interpolate user input
+# into this string — doing so would create an XSS vulnerability.
 st.markdown("""
 <style>
     .block-container { padding-top: 1rem; padding-bottom: 0rem; }
@@ -171,12 +175,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("Market-Cap Weighted Portfolio Backtest")
+st.caption(
+    "Market cap estimates use current shares outstanding adjusted for splits only. "
+    "Buybacks, secondary offerings, and corporate actions (mergers/spin-offs) are not reflected, "
+    "which may cause historical ranking inaccuracies for companies with significant share count changes."
+)
 
 # ---------------------------------------------------------------------------
 # Data loading (cached)
 # ---------------------------------------------------------------------------
 
-@st.cache_data(show_spinner="Loading market data...")
+@st.cache_data(show_spinner="Loading market data...", ttl=3600)
 def load_data():
     from data_fetcher import fetch_all
     from market_cap_estimator import estimate_market_caps, rank_by_market_cap
@@ -187,7 +196,10 @@ def load_data():
     rankings = rank_by_market_cap(mcaps)
     return data, mcaps, rankings
 
-@st.cache_data(show_spinner="Running backtest...")
+# Cache correctness requires strategy_name to be unique per strategy.
+# The underscore-prefixed params (_strategy_fn, _prices, etc.) are excluded
+# from the cache key; strategy_name differentiates cached results.
+@st.cache_data(show_spinner="Running backtest...", max_entries=20, ttl=3600)
 def run_cached_backtest(
     _strategy_fn, _prices, _rankings, _market_caps, _risk_free,
     initial_capital, monthly_contribution, cost_schedule,
@@ -230,6 +242,10 @@ end_date_input = col_end.date_input(
 # Convert date_input values to the YYYY-MM strings the backtest engine expects
 start_date = start_date_input.strftime("%Y-%m")
 end_date = end_date_input.strftime("%Y-%m")
+
+if start_date_input >= end_date_input:
+    st.error("Start date must be before end date.")
+    st.stop()
 
 st.sidebar.subheader("Capital")
 initial_capital = st.sidebar.number_input(
@@ -279,9 +295,21 @@ for name in sorted(BENCHMARKS.keys()):
 try:
     data, mcaps, rankings = load_data()
 except Exception as e:
-    st.error(f"Failed to load data: {e}")
-    st.info("Run `python data_fetcher.py` first to fetch and cache market data.")
+    st.error(f"Failed to load market data: {e}")
+    st.info("If running on Streamlit Cloud, ensure cached parquet files exist in the results/ directory. "
+            "Run `python scripts/data_fetcher.py` locally to generate them, then commit to the repo.")
     st.stop()
+
+# Data freshness indicator
+manifest_path = RESULTS_DIR / "data_manifest.json"
+if manifest_path.exists():
+    import json
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+    if manifest:
+        first_entry = next(iter(manifest.values()))
+        fetch_date = first_entry.get("fetch_date", "unknown")
+        st.sidebar.caption(f"Data cached: {fetch_date[:10]}")
 
 rf = data["risk_free"]
 if isinstance(rf, pd.DataFrame):
@@ -370,9 +398,10 @@ for name, res in strategy_results.items():
 for bname, bret in bench_returns_dict.items():
     all_twr[bname] = bret
     values = [initial_capital]
-    for r in bret.values:
+    for j, r in enumerate(bret.values):
         prev = values[-1]
-        new_val = prev * (1 + r) + monthly_contribution
+        contrib = monthly_contribution if j > 0 else 0.0
+        new_val = prev * (1 + r) + contrib
         values.append(new_val)
     bench_eq = pd.Series(values[1:], index=bret.index, name=bname)
     all_equity[bname] = bench_eq
@@ -717,6 +746,8 @@ with tab_risk:
 # TAB: Comparison
 # =========================================================================
 with tab_compare:
+    st.caption("⚠ Strategy returns are net of transaction costs (10-50 bps). Benchmark returns are gross. "
+               "Comparative metrics (alpha, hit rate, capture ratios) reflect this asymmetry.")
     # --- Strategy Comparison: Faceted Subplots ---
     if len(all_metrics) > 1:
         st.subheader("Strategy & Benchmark Comparison")

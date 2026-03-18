@@ -27,11 +27,7 @@ PERIODS = {
     "2020–2026": "2020-01-31",
 }
 
-STRATEGIES = {
-    "Top-1": make_top1_fn(),
-    "Top-5 EW": make_topn_fn(5),
-    "Log-Momentum(5,6)": make_momentum_fn(5, 6),
-}
+# STRATEGIES dict is created inside main() to avoid module-level side effects.
 
 METRIC_KEYS = [
     "cagr_twr",
@@ -669,6 +665,16 @@ def write_strategy_definitions_sheet(wb: Workbook):
 
 
 def main():
+    STRATEGIES = {
+        "Top-1": make_top1_fn(),
+        "Top-5 EW": make_topn_fn(5),
+        # NOTE: Uses fixed default parameters (N=5, k=6). For optimized parameters,
+        # see grid_search_results.csv. The dashboard (app.py) reads optimized values.
+        "Log-Momentum(5,6)": make_momentum_fn(5, 6),
+    }
+    # Make STRATEGIES accessible to run_period via closure / global assignment
+    globals()["STRATEGIES"] = STRATEGIES
+
     print("Loading data...")
     data = fetch_all(use_cache=True)
     mcaps = estimate_market_caps(data["prices"], data["splits"], data["shares_outstanding"], data["delisted"])

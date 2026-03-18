@@ -7,3 +7,4 @@ numpy==1.26.4
 scipy==1.14.1
 pyarrow==18.1.0
 numpy-financial==1.0.0
+openpyxl==3.1.2

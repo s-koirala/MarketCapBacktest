@@ -150,6 +150,9 @@ def compute_strategy3_returns(
     Months where the strategy produces no weights (e.g., insufficient
     lookback history) are excluded (NaN), not recorded as 0.0, to avoid
     inflating Sharpe with zero-volatility observations.
+
+    The full-period return computation is safe because the function only
+    accesses causal data (weights from t-1, returns at t) at each timestep.
     """
     from strategies import strategy_momentum
 
@@ -553,16 +556,16 @@ if __name__ == "__main__":
         risk_free=data["risk_free"],
     )
 
-    print("\n=== Grid Search Results (top 10) ===")
-    print(results.head(10).to_string(index=False))
+    logger.info("=== Grid Search Results (top 10) ===\n%s", results.head(10).to_string(index=False))
 
     selected = results[results["selected"]]
     if not selected.empty:
-        print(f"\nSelected: N={selected.iloc[0]['n_candidates']}, "
-              f"k={selected.iloc[0]['k_lookback']}, "
-              f"mean_sharpe={selected.iloc[0]['mean_sharpe']:.4f}")
+        logger.info("Selected: N=%d, k=%d, mean_sharpe=%.4f",
+                    selected.iloc[0]['n_candidates'],
+                    selected.iloc[0]['k_lookback'],
+                    selected.iloc[0]['mean_sharpe'])
     else:
-        print("\nNo parameter set selected (RC p > 0.10). Default to equal-weight top-5.")
+        logger.info("No parameter set selected (RC p > 0.10). Default to equal-weight top-5.")
 
     # Save results with data hash for reproducibility
     import hashlib, json

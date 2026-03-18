@@ -17,7 +17,11 @@ Market-cap weighted portfolio backtest: three monthly-rebalancing strategies all
 ```
 MarketCapBacktest/
 ├── CLAUDE.md                              ← this file
+├── README.md                              # Project overview, setup, deployment instructions
 ├── requirements.txt                       # Pinned: yfinance, streamlit, plotly, pandas, scipy, etc.
+├── .python-version                        # Python version pin for Streamlit Cloud / cloud platforms
+├── .streamlit/
+│   └── config.toml                        # Root-level Streamlit config (used by Streamlit Cloud)
 ├── docs/
 │   ├── IMPLEMENTATION_PLAN.md             # v2.0 — canonical spec
 │   └── DASHBOARD_DESIGN_REFERENCE.md      # Best practices reference
@@ -31,8 +35,8 @@ MarketCapBacktest/
 │   ├── backtest_engine.py                 # Monthly rebalance loop, TWR, XIRR cash flows, trade log
 │   ├── metrics.py                         # Sharpe, Sortino, Calmar, Omega, VaR/CVaR, Alpha, Beta, etc.
 │   ├── grid_search.py                     # Walk-forward (60/36/12), White's Reality Check, 48-combo grid
-│   ├── app.py                             # Streamlit dashboard
-│   ├── .streamlit/config.toml             # Light theme, headless server
+│   ├── app.py                             # Streamlit dashboard (entry point for deployment)
+│   ├── .streamlit/config.toml             # Light theme, headless server (used for local dev)
 │   ├── test_phase2.py                     # 9/9 PASS
 │   ├── test_phase3.py                     # 8/8 PASS
 │   ├── test_phase4.py                     # 5/5 PASS
@@ -193,6 +197,27 @@ python data_fetcher.py        # Fetches all data, writes parquet + manifest
 python market_cap_estimator.py # Estimates market caps, validates rankings
 python grid_search.py          # Runs 48-combo walk-forward optimization
 ```
+
+---
+
+## Deployment
+
+### Streamlit Community Cloud (primary)
+
+- **Main file path:** `scripts/app.py`
+- **Python version:** Reads `.python-version` at repo root. Set to `3.10` or higher.
+- **Dependencies:** Installed automatically from `requirements.txt`.
+- **Theme:** Root-level `.streamlit/config.toml` applies the forced light theme on Community Cloud. The `scripts/.streamlit/config.toml` is used for local development (when running `streamlit run` from the `scripts/` directory).
+- **Secrets:** If a FRED API key is needed, configure via the Streamlit Cloud dashboard under Advanced settings > Secrets (TOML format: `FRED_API_KEY = "..."`). Access in code via `st.secrets["FRED_API_KEY"]`.
+- **Resource limits:** Free tier provides 1 GB RAM. Pre-compute grid search results and cache in `results/` to avoid memory pressure. Apps sleep after inactivity.
+
+### Alternative platforms
+
+- **HuggingFace Spaces:** Select Streamlit SDK. Reads `requirements.txt`. More generous compute (2 vCPU, 16 GB RAM free tier). Requires entry point at repo root or a wrapper `app.py`.
+- **Render:** Use a Dockerfile. Expose port 8501. Free tier has cold starts (~30s) after 15 min inactivity.
+- **Railway:** Use a `Procfile` (`web: streamlit run scripts/app.py --server.port=$PORT --server.address=0.0.0.0`). $5/month free credit; may not cover continuous uptime.
+
+See `README.md` for step-by-step instructions for each platform.
 
 ---
 

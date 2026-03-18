@@ -217,17 +217,21 @@ def compute_var(
     # Historical VaR
     hist_var = np.percentile(monthly_returns, alpha * 100)
 
-    # Cornish-Fisher VaR
-    z = stats.norm.ppf(alpha)
-    s = stats.skew(monthly_returns)
-    k = stats.kurtosis(monthly_returns)  # excess kurtosis
-    z_cf = (
-        z
-        + (z**2 - 1) * s / 6
-        + (z**3 - 3 * z) * k / 24
-        - (2 * z**3 - 5 * z) * s**2 / 36
-    )
-    cf_var = monthly_returns.mean() + z_cf * monthly_returns.std(ddof=1)
+    # Cornish-Fisher VaR — requires sufficient sample size for reliable
+    # skewness/kurtosis estimates. Fall back to historical for N < 100.
+    if n >= 100:
+        z = stats.norm.ppf(alpha)
+        s = stats.skew(monthly_returns)
+        k = stats.kurtosis(monthly_returns)  # excess kurtosis
+        z_cf = (
+            z
+            + (z**2 - 1) * s / 6
+            + (z**3 - 3 * z) * k / 24
+            - (2 * z**3 - 5 * z) * s**2 / 36
+        )
+        cf_var = monthly_returns.mean() + z_cf * monthly_returns.std(ddof=1)
+    else:
+        cf_var = hist_var  # insufficient sample for Cornish-Fisher adjustment
 
     # Bootstrap 95% CI on historical VaR
     rng = np.random.default_rng(seed)
@@ -426,7 +430,10 @@ def compute_tracking_error(
 def compute_capture_ratios(
     monthly_returns: pd.Series, benchmark_returns: pd.Series,
 ) -> dict[str, float]:
-    """Up and Down capture ratios."""
+    """Up and Down capture ratios.
+
+    Convention: arithmetic mean (not geometric/Morningstar convention).
+    """
     aligned = pd.DataFrame({
         "port": monthly_returns, "bench": benchmark_returns
     }).dropna()
