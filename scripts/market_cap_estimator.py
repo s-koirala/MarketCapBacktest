@@ -164,12 +164,19 @@ def estimate_market_caps(
     active["backward_shares"] = active["shares_outstanding"]
 
     # Override with historical shares where available (fixes buyback/dilution error).
+    # Historical shares are in RAW (pre-split) units. Since close is split-adjusted,
+    # we must multiply by cum_split_factor to convert raw shares to current-split-basis:
+    #   market_cap = close_split_adj × hist_shares_raw × cum_split_factor
+    #              = (close_raw / csf) × hist_shares_raw × csf
+    #              = close_raw × hist_shares_raw  (correct market cap)
     if historical_shares is not None and not historical_shares.empty:
         hist = historical_shares[["date", "ticker", "shares_outstanding"]].copy()
         hist = hist.rename(columns={"shares_outstanding": "hist_shares"})
         active = active.merge(hist, on=["date", "ticker"], how="left")
         mask = active["hist_shares"].notna()
-        active.loc[mask, "backward_shares"] = active.loc[mask, "hist_shares"]
+        active.loc[mask, "backward_shares"] = (
+            active.loc[mask, "hist_shares"] * active.loc[mask, "cum_split_factor"]
+        )
         active = active.drop(columns=["hist_shares"])
         logger.info(
             "Historical shares override: %d of %d rows (%.1f%%)",
